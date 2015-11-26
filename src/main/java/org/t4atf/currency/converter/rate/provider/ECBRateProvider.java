@@ -1,4 +1,4 @@
-package org.t4atf.currency.converter;
+package org.t4atf.currency.converter.rate.provider;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -8,9 +8,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Currency;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -18,12 +16,15 @@ import javax.xml.parsers.SAXParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestTemplate;
+import org.t4atf.currency.converter.controllers.CurrencyConverter;
 import org.t4atf.currency.converter.exceptions.RateProviderException;
+import org.t4atf.currency.converter.rate.Rate;
+import org.t4atf.currency.converter.rate.RateSet;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class ECBRateProvider {
+public class ECBRateProvider implements RateProvider {
 	public static final String RATES_LOCATION = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 	private static Logger LOG = LoggerFactory.getLogger(CurrencyConverter.class);
 
@@ -33,26 +34,29 @@ public class ECBRateProvider {
 		this.restTemplate = restTemplate;
 	}
 
-	public Set<Rate> getRates() {
-		return handle((set) -> buildRates(set), new HashSet<Rate>());
+	@Override
+	public RateSet getRates() {
+		return handle((set) -> buildRates(set), new RateSet());
 	}
 
-	private Set<Rate> buildRates(Set<Rate> rateAccumulator) throws SAXException, IOException, ParserConfigurationException {
+	private RateSet buildRates(RateSet rateAccumulator) throws SAXException, IOException, ParserConfigurationException {
 		DefaultHandler handler = new DefaultHandler() {
 			public void startElement(String uri, String localName,
 									 String qName, Attributes attributes) {
-				if (qName.equals("Cube")) {
-					UnsafeOperation<Attributes, Optional<Rate>> op = (attrs) -> {
+				handle(extractRateOperation(qName), attributes).ifPresent((r) -> rateAccumulator.add(r));
+			}
+
+			private UnsafeOperation<Attributes, Optional<Rate>> extractRateOperation(String qName) {
+				return (attrs) -> {
+					if (qName.equals("Cube")) {
 						String currency = attrs.getValue("currency");
 						String rate = attrs.getValue("rate");
 						if (currency != null && rate != null) {
 							return Optional.of(Rate.of(Currency.getInstance("EUR"), Currency.getInstance(currency), numericalRate(rate)));
 						}
-						return Optional.empty();
-					};
-
-					handle(op, attributes).ifPresent((r) -> rateAccumulator.add(r));
-				}
+					}
+					return Optional.empty();
+				};
 			}
 
 			private BigDecimal numericalRate(String rate) throws ParseException {

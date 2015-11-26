@@ -1,19 +1,17 @@
-package org.t4atf.currency.converter;
+package org.t4atf.currency.converter.rate.provider;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.t4atf.currency.converter.utils.FileUtils.readFileAsString;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Currency;
-import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,6 +22,8 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseActions;
 import org.springframework.web.client.RestTemplate;
 import org.t4atf.currency.converter.exceptions.RateProviderException;
+import org.t4atf.currency.converter.rate.Rate;
+import org.t4atf.currency.converter.rate.RateSet;
 
 public class ECBRateProviderTest {
 
@@ -37,12 +37,13 @@ public class ECBRateProviderTest {
 	@Test
 	public void getRates() throws ParseException, IOException, URISyntaxException {
 		serverActions.andRespond(withSuccess(readFileAsString("fakeRates.xml"), MediaType.TEXT_XML));
-		Set<Rate> rates = provider.getRates();
+		RateSet rates = provider.getRates();
 
-		assertThat(rates, containsInAnyOrder(
-			Rate.of(Currency.getInstance("EUR"), Currency.getInstance("USD"), rate("1.0612")),
-			Rate.of(Currency.getInstance("EUR"), Currency.getInstance("JPY"), rate("130.06"))
-			));
+		RateSet expected = new RateSet();
+		expected.add(Rate.of(Currency.getInstance("EUR"), Currency.getInstance("USD"), rate("1.0612")));
+		expected.add(Rate.of(Currency.getInstance("EUR"), Currency.getInstance("JPY"), rate("130.06")));
+
+		assertThat(rates, equalTo(expected));
 	}
 
 	@Test
@@ -61,11 +62,6 @@ public class ECBRateProviderTest {
 		exception.expect(RateProviderException.class);
 
 		provider.getRates();
-	}
-
-	private String readFileAsString(String filePath) throws IOException, URISyntaxException {
-		return new String(Files.readAllBytes(
-			Paths.get(ECBRateProviderTest.class.getClassLoader().getResource(filePath).toURI())));
 	}
 
 	private BigDecimal rate(String rate) throws ParseException {

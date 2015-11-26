@@ -5,7 +5,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
 @EnableAutoConfiguration
-@ComponentScan
+@ComponentScan(basePackages = {
+	"org.t4atf.currency.converter.controllers",
+	"org.t4atf.currency.converter.configuration"
+})
 public class SpringBootApplication {
 
 	public static void main(String[] args) {

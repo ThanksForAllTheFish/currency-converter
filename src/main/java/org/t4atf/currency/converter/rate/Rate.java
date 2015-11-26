@@ -1,4 +1,4 @@
-package org.t4atf.currency.converter;
+package org.t4atf.currency.converter.rate;
 
 import java.math.BigDecimal;
 import java.util.Currency;
