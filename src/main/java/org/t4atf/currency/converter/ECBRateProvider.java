@@ -25,7 +25,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class ECBRateProvider {
 	public static final String RATES_LOCATION = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
-	public static final DecimalFormat DECIMAL_FORMAT = buildDecimalFormat();
 	private static Logger LOG = LoggerFactory.getLogger(CurrencyConverter.class);
 
 	private final RestTemplate restTemplate;
@@ -57,7 +56,7 @@ public class ECBRateProvider {
 			}
 
 			private BigDecimal numericalRate(String rate) throws ParseException {
-				return (BigDecimal) DECIMAL_FORMAT.parse(rate);
+				return (BigDecimal) buildDecimalFormat().parse(rate);
 			}
 		};
 

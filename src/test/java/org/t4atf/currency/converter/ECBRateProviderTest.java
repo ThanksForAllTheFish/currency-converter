@@ -1,7 +1,7 @@
 package org.t4atf.currency.converter;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -69,6 +69,6 @@ public class ECBRateProviderTest {
 	}
 
 	private BigDecimal rate(String rate) throws ParseException {
-		return (BigDecimal) ECBRateProvider.DECIMAL_FORMAT.parse(rate);
+		return new BigDecimal(rate);
 	}
 }
