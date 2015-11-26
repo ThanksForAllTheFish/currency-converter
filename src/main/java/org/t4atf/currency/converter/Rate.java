@@ -5,7 +5,7 @@ import java.util.Currency;
 
 import lombok.Data;
 
-@Data
+@Data(staticConstructor = "of")
 public class Rate {
 
 	private final Currency from;
