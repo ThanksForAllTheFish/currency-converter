@@ -22,7 +22,6 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseActions;
 import org.springframework.web.client.RestTemplate;
 import org.t4atf.currency.converter.exceptions.RateProviderException;
-import org.t4atf.currency.converter.rate.Rate;
 import org.t4atf.currency.converter.rate.RateSet;
 
 public class ECBRateProviderTest {
@@ -40,8 +39,8 @@ public class ECBRateProviderTest {
 		RateSet rates = provider.getRates();
 
 		RateSet expected = new RateSet();
-		expected.add(Rate.of(Currency.getInstance("EUR"), Currency.getInstance("USD"), rate("1.0612")));
-		expected.add(Rate.of(Currency.getInstance("EUR"), Currency.getInstance("JPY"), rate("130.06")));
+		expected.add(Currency.getInstance("EUR"), Currency.getInstance("USD"), rate("1.0612"));
+		expected.add(Currency.getInstance("EUR"), Currency.getInstance("JPY"), rate("130.06"));
 
 		assertThat(rates, equalTo(expected));
 	}
