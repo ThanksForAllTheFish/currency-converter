@@ -21,32 +21,31 @@ public class RateSetTest {
 
 	private static final RateSet RATE_SET = fakeRakeSet();
 
-	private final BigDecimal amount;
 	private final Currency from;
 	private final Currency to;
-	private final Optional<BigDecimal> expected;
+	private final Optional<FixedScaledRate> expected;
 
-	@Parameterized.Parameters(name = "{index}: converting {0}{1} to {2} should return {3} ")
+	@Parameterized.Parameters(name = "{index}: rate between {1} and {2} should be {3} ")
 	public static List<Object[]> data() {
 		return Arrays.asList(
-			new Object[]{new BigDecimal("100"), Currency.getInstance("EUR"), Currency.getInstance("USD"), newBigDecimal("150")},
-			new Object[]{new BigDecimal(".5"), Currency.getInstance("EUR"), Currency.getInstance("JPY"), newBigDecimal("75")},
-			new Object[]{new BigDecimal("15"), Currency.getInstance("USD"), Currency.getInstance("EUR"), newBigDecimal("10")},
-			new Object[]{new BigDecimal("150"), Currency.getInstance("JPY"), Currency.getInstance("EUR"), newBigDecimal("1")},
-			new Object[]{new BigDecimal("0.5"), Currency.getInstance("JPY"), Currency.getInstance("USD"), newBigDecimal("0.01")},
-			new Object[]{new BigDecimal("1"), Currency.getInstance("USD"), Currency.getInstance("GBP"), Optional.empty()},
-			new Object[]{new BigDecimal("1"), Currency.getInstance("GBP"), Currency.getInstance("JPY"), Optional.empty()}
+			new Object[]{Currency.getInstance("EUR"), Currency.getInstance("USD"), expectedValue("1.5")},
+			new Object[]{Currency.getInstance("EUR"), Currency.getInstance("JPY"), expectedValue("150")},
+			new Object[]{Currency.getInstance("USD"), Currency.getInstance("EUR"), expectedValue("0.666667")},
+			new Object[]{Currency.getInstance("JPY"), Currency.getInstance("EUR"), expectedValue("0.006667")},
+			new Object[]{Currency.getInstance("JPY"), Currency.getInstance("USD"), expectedValue("0.01")},
+			new Object[]{Currency.getInstance("USD"), Currency.getInstance("GBP"), Optional.empty()},
+			new Object[]{Currency.getInstance("GBP"), Currency.getInstance("JPY"), Optional.empty()}
 		);
 	}
 
 	@Test
 	public void test() {
-		assertThat(RATE_SET.convert(from, to, amount), equalTo(expected));
+		assertThat(RATE_SET.getRate(from, to), equalTo(expected));
 	}
 
-	private static Optional<BigDecimal> newBigDecimal(String value) {
+	private static Optional<FixedScaledRate> expectedValue(String value) {
 		return
-			Optional.of(new BigDecimal(value).setScale(2));
+			Optional.of(new FixedScaledRate(new BigDecimal(value)));
 	}
 
 	private static RateSet fakeRakeSet() {

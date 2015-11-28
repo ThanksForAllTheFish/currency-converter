@@ -69,7 +69,7 @@ public class SpringBootApplicationTest {
 	@Test
 	public void validConversion() {
 		Response rate = client.getForObject("http://localhost:9000/rate?from=EUR&to=USD&amount=100", Response.class);
-		assertThat(rate, equalTo(new Response("EUR", "USD", "100", "106.12")));
+		assertThat(rate, equalTo(new Response("EUR", "USD", "100.00", "1.0612", "106.12")));
 	}
 
 	@Test
@@ -89,12 +89,14 @@ public class SpringBootApplicationTest {
 		private final String from;
 		private final String to;
 		private final String amount;
+		private final String rate;
 		private final String result;
 
-		private Response(String from, String to, String amount, String result) {
+		private Response(String from, String to, String amount, String rate, String result) {
 			this.from = from;
 			this.to = to;
 			this.amount = amount;
+			this.rate = rate;
 			this.result = result;
 		}
 
@@ -102,8 +104,9 @@ public class SpringBootApplicationTest {
 		public static Response newResponse(@JsonProperty("from") String from,
 										   @JsonProperty("to") String to,
 										   @JsonProperty("amount") String amount,
+										   @JsonProperty("rate") String rate,
 										   @JsonProperty("result") String result) {
-			return new Response(from, to, amount, result);
+			return new Response(from, to, amount, rate, result);
 		}
 	}
 }
