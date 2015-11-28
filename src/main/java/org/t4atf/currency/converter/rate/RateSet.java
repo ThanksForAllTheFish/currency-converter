@@ -23,7 +23,7 @@ public class RateSet {
 		(key) -> Optional.ofNullable(rates.get(key));
 	private BiFunction<CurrencyMapping, Function<FixedScaledRate, FixedScaledRate>, Optional<BigDecimal>> rateCalculation =
 		((BiFunction<CurrencyMapping, Function<FixedScaledRate, FixedScaledRate>, Optional<FixedScaledRate>>) (key, func) ->
-			retriever.apply(key).map(func)).andThen((rate) -> rate.map((v) -> v.toRawValue()));
+			retriever.apply(key).map(func)).andThen((rate) -> rate.map((v) -> v.toRate()));
 
 	public void add(Currency from, Currency to, BigDecimal ratio)
 	{
@@ -49,9 +49,9 @@ public class RateSet {
 
 	private Optional<BigDecimal> computeUnknownBaseRate(Currency from, Currency to, BigDecimal amount) {
 		BiFunction<CurrencyMapping, CurrencyMapping, Optional<BigDecimal>> second =
-			(key1, key2) ->
-				retriever.apply(key1).flatMap(
-					(val1) -> rateCalculation.apply(key2, (val2) -> val1.divide(val2).multiply(amount(amount)))
+			  (keyFrom, keyTo) ->
+				retriever.apply(keyFrom).flatMap(
+					(rateFrom) -> rateCalculation.apply(keyTo, (rateTo) -> rateFrom.divide(rateTo).multiply(amount(amount)))
 				);
 
 		return second.apply(new CurrencyMapping(DEFAULT, to), new CurrencyMapping(DEFAULT, from));
@@ -71,7 +71,8 @@ public class RateSet {
 	@EqualsAndHashCode
 	private static class FixedScaledRate {
 
-		private static final int SCALE = 6;
+		private static final int CALCULATION_SCALE = 6;
+		private static final int PRESENTATION_SCALE = 2;
 		private static final int ROUNDING_MODE = BigDecimal.ROUND_HALF_UP;
 
 		private static final FixedScaledRate ONE = new FixedScaledRate(BigDecimal.ONE);
@@ -79,7 +80,7 @@ public class RateSet {
 		private final BigDecimal rate;
 
 		public FixedScaledRate(@NonNull BigDecimal rate) {
-			this.rate = rate.setScale(SCALE, ROUNDING_MODE);
+			this.rate = rate.setScale(CALCULATION_SCALE, ROUNDING_MODE);
 		}
 
 		public FixedScaledRate multiply(FixedScaledRate amount) {
@@ -90,8 +91,8 @@ public class RateSet {
 			return new FixedScaledRate(rate.divide(amount.rate, ROUNDING_MODE));
 		}
 
-		public BigDecimal toRawValue() {
-			return rate;
+		public BigDecimal toRate() {
+			return rate.setScale(PRESENTATION_SCALE, ROUNDING_MODE);
 		}
 	}
 }
