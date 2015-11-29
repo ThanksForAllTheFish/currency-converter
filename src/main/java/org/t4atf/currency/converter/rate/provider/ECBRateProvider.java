@@ -15,10 +15,12 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.client.RestTemplate;
 import org.t4atf.currency.converter.controllers.CurrencyConverter;
 import org.t4atf.currency.converter.exceptions.RateProviderException;
 import org.t4atf.currency.converter.rate.RateSet;
+import org.t4atf.currency.converter.rate.Rates;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -36,7 +38,8 @@ public class ECBRateProvider implements RateProvider {
 	}
 
 	@Override
-	public RateSet getRates() {
+	@Cacheable(cacheNames = "ECBRates")
+	public Rates getRates() {
 		return handle((set) -> buildRates(set), new RateSet());
 	}
 

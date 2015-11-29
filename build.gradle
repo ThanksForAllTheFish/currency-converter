@@ -36,10 +36,12 @@ idea {
 }
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter-web")
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-cache'
     compile 'org.slf4j:slf4j-api:1.7.12'
+    compile 'com.google.guava:guava:18.0'
 
-    provided "org.projectlombok:lombok:1.16.6"
+    provided 'org.projectlombok:lombok:1.16.6'
 
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }

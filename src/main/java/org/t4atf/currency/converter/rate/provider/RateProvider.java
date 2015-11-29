@@ -1,7 +1,7 @@
 package org.t4atf.currency.converter.rate.provider;
 
-import org.t4atf.currency.converter.rate.RateSet;
+import org.t4atf.currency.converter.rate.Rates;
 
 public interface RateProvider {
-	RateSet getRates();
+	Rates getRates();
 }

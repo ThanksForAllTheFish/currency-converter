@@ -23,6 +23,7 @@ import org.springframework.test.web.client.ResponseActions;
 import org.springframework.web.client.RestTemplate;
 import org.t4atf.currency.converter.exceptions.RateProviderException;
 import org.t4atf.currency.converter.rate.RateSet;
+import org.t4atf.currency.converter.rate.Rates;
 
 public class ECBRateProviderTest {
 
@@ -36,7 +37,7 @@ public class ECBRateProviderTest {
 	@Test
 	public void getRates() throws ParseException, IOException, URISyntaxException {
 		serverActions.andRespond(withSuccess(readFileAsString("fakeRates.xml"), MediaType.TEXT_XML));
-		RateSet rates = provider.getRates();
+		Rates rates = provider.getRates();
 
 		RateSet expected = new RateSet();
 		expected.add(Currency.getInstance("EUR"), Currency.getInstance("USD"), rate("1.0612"));

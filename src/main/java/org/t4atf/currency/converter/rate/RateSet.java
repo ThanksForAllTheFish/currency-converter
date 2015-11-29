@@ -14,26 +14,31 @@ import lombok.ToString;
 
 @ToString(of = "rates")
 @EqualsAndHashCode(of = "rates")
-public class RateSet {
+public class RateSet implements Rates {
 
 	private static final Currency DEFAULT = Currency.getInstance("EUR");
 	private final Map<CurrencyMapping, FixedScaledRate> rates = new HashMap<>();
 	private final Function<CurrencyMapping, Optional<FixedScaledRate>> retriever =
 		(key) -> Optional.ofNullable(rates.get(key));
-	private BiFunction<CurrencyMapping, Function<FixedScaledRate, FixedScaledRate>, Optional<FixedScaledRate>> rateCalculation =
+	private final BiFunction<CurrencyMapping, Function<FixedScaledRate, FixedScaledRate>, Optional<FixedScaledRate>> rateConversion =
 		(key, func) -> retriever.apply(key).map(func);
+	private final BiFunction<CurrencyMapping, CurrencyMapping, Optional<FixedScaledRate>> unknownCurrencyRateConversion = (keyFrom, keyTo) ->
+		retriever.apply(keyFrom).flatMap(
+			(rateFrom) -> rateConversion.apply(keyTo, (rateTo) -> rateFrom.divide(rateTo))
+		);
 
 	public void add(Currency from, Currency to, BigDecimal ratio)
 	{
 		rates.put(new CurrencyMapping(from, to), amount(ratio));
 	}
 
+	@Override
 	public Optional<FixedScaledRate> getRate(Currency from, Currency to) {
 
-		Optional<FixedScaledRate> direct = rateCalculation.apply(
+		Optional<FixedScaledRate> direct = rateConversion.apply(
 			new CurrencyMapping(from, to), Function.identity());
 
-		Optional<FixedScaledRate> inverse = rateCalculation.apply(
+		Optional<FixedScaledRate> inverse = rateConversion.apply(
 			new CurrencyMapping(to, from), (rate) -> FixedScaledRate.ONE.divide(rate));
 
 		return direct.isPresent() ? direct :
@@ -42,13 +47,7 @@ public class RateSet {
 	}
 
 	private Optional<FixedScaledRate> computeUnknownBaseRate(Currency from, Currency to) {
-		BiFunction<CurrencyMapping, CurrencyMapping, Optional<FixedScaledRate>> second =
-			  (keyFrom, keyTo) ->
-				retriever.apply(keyFrom).flatMap(
-					(rateFrom) -> rateCalculation.apply(keyTo, (rateTo) -> rateFrom.divide(rateTo))
-				);
-
-		return second.apply(new CurrencyMapping(DEFAULT, to), new CurrencyMapping(DEFAULT, from));
+		return unknownCurrencyRateConversion.apply(new CurrencyMapping(DEFAULT, to), new CurrencyMapping(DEFAULT, from));
 	}
 
 	private FixedScaledRate amount(BigDecimal amount) {
